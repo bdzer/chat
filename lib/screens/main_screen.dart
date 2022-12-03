@@ -1,5 +1,7 @@
+ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:yummy_chat_lecture1/config/palette.dart';
+
 
 class LoginSignupScreen extends StatefulWidget {
   const LoginSignupScreen({Key? key}) : super(key: key);
@@ -9,7 +11,19 @@ class LoginSignupScreen extends StatefulWidget {
 }
 
 class _LoginSignupScreenState extends State<LoginSignupScreen> {
+  final _authentication= FirebaseAuth.instance;
   bool isSignupScreen = true;
+  final _formKey=GlobalKey<FormState>();
+  String userName='';
+  String userEmail='';
+  String userPassword='';
+  void_tryValidation(){
+    final isValid = _formKey.currentState!.validate();
+    if(isValid){
+      _formKey.currentState!.save();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,9 +167,23 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                   Container(
                     margin: EdgeInsets.only(top: 20),
                     child: Form(
+                      key:_formKey,
                       child: Column(
                         children: [
                           TextFormField(
+                            key: ValueKey(1),
+                            validator:(value){
+                           if(value!.isEmpty == value!.length<4) {
+                             return 'please enter at least 4 characters';
+                           }
+                           return null;
+                          },
+                            onSaved:(value){
+                              userName=value!;
+                            },
+                            onChanged: (value){
+                              userName =value!;
+                            },
                             decoration: InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.account_circle,
@@ -184,6 +212,20 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                             height: 8,
                           ),
                           TextFormField(
+                            keyboardType:TextInputType.emailAddress,
+                            key: ValueKey(2),
+                             validator:(value) {
+                               if (value!.isEmpty == value!.contains('@')) {
+                                 return 'please enter at least 4 characters';
+                               }
+                               return null;
+                             },
+                            onSaved: (value){
+                              userEmail=value!;
+                            },
+                            onChanged: (value){
+                              userEmail =value!;
+                            },
                             decoration: InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.email,
@@ -212,6 +254,20 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                             height: 8,
                           ),
                           TextFormField(
+                            obscureText: true,
+                            key: ValueKey(3),
+                            validator:(value) {
+                              if (value!.isEmpty == value!.length < 6) {
+                                return 'please enter at least 4 characters';
+                              }
+                              return null;
+                            },
+                            onSaved: (value){
+                              userPassword=value!;
+                            },
+                            onChanged: (value){
+                              userPassword =value!;
+                            },
                             decoration: InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.lock,
@@ -244,9 +300,12 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                   Container(
                     margin: EdgeInsets.only(top: 20),
                     child: Form(
+                      key:_formKey,
                       child: Column(
                         children: [
                           TextFormField(
+                            key: ValueKey(4),
+
                             decoration: InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.email,
@@ -275,6 +334,8 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                             height: 8.0,
                           ),
                           TextFormField(
+                            key: ValueKey(5),
+
                             decoration: InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.lock,
@@ -322,25 +383,48 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                 decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(50)),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: [Colors.orange, Colors.red],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight),
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        spreadRadius: 1,
-                        blurRadius: 1,
-                        offset: Offset(0, 1),
+                child: GestureDetector(
+                  onTap:()async{
+
+                    if(isSignupScreen){
+                      void_tryValidation();
+                      try{
+                      final newUser =await _authentication.createUserWithEmailAndPassword(
+                          email: userEmail,
+                          password: userPassword);
+                      if(newUser.user !=null){
+
+                      }
+                    }catch(e){
+                      print(e);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content:
+                          Text('please checks your email and password'),
+                        backgroundColor: Colors.blue,
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    color: Colors.white,
+                      );
+                     }
+                  }
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          colors: [Colors.orange, Colors.red],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          spreadRadius: 1,
+                          blurRadius: 1,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -351,26 +435,28 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
             top: MediaQuery.of(context).size.height - 125,
             right: 0,
             left: 0,
-            child: Column(
-              children: [
-                Text(isSignupScreen ? 'or Signup with' : 'or Signin with'),
-                SizedBox(
-                  height: 10,
-                ),
-                TextButton.icon(
-                  onPressed: (){},
-                  style: TextButton.styleFrom(
-                    primary: Colors.white,
-                    minimumSize: Size(155, 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)
-                    ),
-                    backgroundColor: Palette.googleColor
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Text(isSignupScreen ? 'or Signup with' : 'or Signin with'),
+                  SizedBox(
+                    height: 10,
                   ),
-                  icon: Icon(Icons.add),
-                  label: Text('Google'),
-                ),
-              ],
+                  TextButton.icon(
+                    onPressed: (){},
+                    style: TextButton.styleFrom(
+                      primary: Colors.white,
+                      minimumSize: Size(155, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)
+                      ),
+                      backgroundColor: Palette.googleColor
+                    ),
+                    icon: Icon(Icons.add),
+                    label: Text('Google'),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
